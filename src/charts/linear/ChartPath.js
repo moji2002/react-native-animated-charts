@@ -17,7 +17,7 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
-import { Path, Svg } from 'react-native-svg';
+import { Path, Svg, Defs, LinearGradient, Stop } from 'react-native-svg';
 
 import ChartContext, {
   useGenerateValues as generateValues,
@@ -161,6 +161,7 @@ export default function ChartPathProvider({
   springConfig = {},
   timingFeedbackConfig = {},
   timingAnimationConfig = {},
+  gradient,
   children,
   ...rest
 }) {
@@ -675,6 +676,18 @@ function ChartPath({
     return props;
   }, []);
 
+  const gradientAnimatedProps = useAnimatedStyle(() => {
+    const pathValue = path.value.replace('M', 'L');
+    const gradientD =
+      pathValue.length > 0
+        ? `M 0,${height} C 0,0 0,0 0,0 ${pathValue} L ${width},${height}`
+        : '';
+    const props = {
+      d: gradientD,
+    };
+    return props;
+  }, []);
+
   const animatedStyle = useAnimatedStyle(() => {
     return {
       opacity: pathOpacity.value * (1 - selectedOpacity) + selectedOpacity,
@@ -685,6 +698,7 @@ function ChartPath({
     <InternalContext.Provider
       value={{
         animatedProps,
+        gradientAnimatedProps,
         animatedStyle,
         gestureEnabled,
         height,
@@ -695,18 +709,19 @@ function ChartPath({
         width,
       }}
     >
-      {__disableRendering ? children : <SvgComponent />}
+      {__disableRendering ? children : <SvgComponent gradient={gradient} />}
     </InternalContext.Provider>
   );
 }
 
-export function SvgComponent() {
+export function SvgComponent({ gradient }) {
   const {
     style,
     animatedStyle,
     height,
     width,
     animatedProps,
+    gradientAnimatedProps,
     props,
     onLongPressGestureEvent,
     gestureEnabled,
@@ -727,6 +742,11 @@ export function SvgComponent() {
           viewBox={`0 0 ${width} ${height}`}
           width={width}
         >
+          <AnimatedPath
+            animatedProps={gradientAnimatedProps}
+            fill="url(#prefix__paint0_linear)"
+          />
+          {gradient}
           <AnimatedPath
             animatedProps={animatedProps}
             {...props}
