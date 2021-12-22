@@ -161,7 +161,6 @@ export default function ChartPathProvider({
   springConfig = {},
   timingFeedbackConfig = {},
   timingAnimationConfig = {},
-  gradient,
   children,
   ...rest
 }) {
@@ -545,6 +544,8 @@ function ChartPath({
   progress,
   layoutSize,
   __disableRendering,
+  startColor,
+  stopColor,
   children,
   ...props
 }) {
@@ -709,12 +710,16 @@ function ChartPath({
         width,
       }}
     >
-      {__disableRendering ? children : <SvgComponent gradient={gradient} />}
+      {__disableRendering ? (
+        children
+      ) : (
+        <SvgComponent startColor={startColor} stopColor={stopColor} />
+      )}
     </InternalContext.Provider>
   );
 }
 
-export function SvgComponent({ gradient }) {
+export function SvgComponent({ startColor, stopColor }) {
   const {
     style,
     animatedStyle,
@@ -746,7 +751,18 @@ export function SvgComponent({ gradient }) {
             animatedProps={gradientAnimatedProps}
             fill="url(#prefix__paint0_linear)"
           />
-          {gradient}
+          <Defs>
+            <LinearGradient
+              id="prefix__paint0_linear"
+              x1="100%"
+              y1="0%"
+              x2="100%"
+              y2="100%"
+            >
+              <Stop offset="0%" stopColor={startColor} stopOpacity={0.5} />
+              <Stop offset="100%" stopColor={stopColor} stopOpacity={0} />
+            </LinearGradient>
+          </Defs>
           <AnimatedPath
             animatedProps={animatedProps}
             {...props}
